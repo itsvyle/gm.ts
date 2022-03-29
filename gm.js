@@ -1,16 +1,82 @@
 var GMFlags = /** @class */ (function () {
     function GMFlags(vals, flags_) {
+        this.cname = null;
+        this.version = null;
         this.flag_values = {};
         for (var n in vals) {
             this.flag_values[n] = (1 << vals[n]);
         }
-        if (flags_ && typeof flags_ == "number")
+        if (flags_ && typeof flags_ == "number") {
             this.flags = flags_;
+        }
+        else {
+            this.flags = 0;
+        }
     }
+    GMFlags.prototype.add = function (flag) {
+        var _this = this;
+        if (Array.isArray(flag)) {
+            return flag.every(function (f) { return _this.add(f); });
+        }
+        else {
+            if (!(flag in this.flag_values))
+                return false;
+            this.flags |= this.flag_values[flag];
+            return true;
+        }
+    };
+    GMFlags.prototype.has = function (flag) {
+        var _this = this;
+        if (Array.isArray(flag)) {
+            return flag.every(function (f) { return _this.has(f); });
+        }
+        if (!(flag in this.flag_values))
+            return false;
+        var n = this.flag_values[flag];
+        return ((this.flags & n) === n);
+    };
+    GMFlags.prototype.remove = function (flag) {
+        var _this = this;
+        if (Array.isArray(flag)) {
+            return flag.every(function (f) { return _this.remove(f); });
+        }
+        if (!(flag in this.flag_values))
+            return false;
+        this.flags &= ~this.flag_values[flag];
+        return true;
+    };
+    GMFlags.prototype.array = function () {
+        var r = [];
+        for (var f in this.flag_values) {
+            var n = this.flag_values[f];
+            if ((this.flags & n) === n)
+                r.push(f);
+        }
+        return r;
+    };
+    GMFlags.prototype.object = function () {
+        var r = {};
+        for (var f in this.flag_values) {
+            var n = this.flag_values[f];
+            r[f] = (this.flags & n) === n;
+        }
+        return r;
+    };
+    GMFlags.prototype.setFlags = function (f) {
+        this.flags = f;
+    };
+    GMFlags.prototype.set = function (flag, val) {
+        return (val === true) ? this.add(flag) : this.remove(flag);
+    };
+    GMFlags.prototype.fromObject = function (o) {
+        var _this = this;
+        return Object.keys(o).every(function (k) { return _this.set(k, o[k]); });
+    };
     return GMFlags;
 }());
 var gm = new /** @class */ (function () {
     function class_1() {
+        this.Flags = GMFlags;
     }
     class_1.prototype.onload = function (clb) {
         window.addEventListener("load", clb);

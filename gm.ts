@@ -27,21 +27,81 @@ interface GMRequestReturn<Type> {
     headers: GMRequestHeaders | null;
     res: Type | null | string;
 }
+type GMFlagChangeArgument = (string | string[])
 class GMFlags {
     flag_values: Record<string, number>;
     flags: number;
+    cname: string | null = null;
+    version: string | null = null
+
     constructor(vals: Record<string,number>,flags_?: number) {
         this.flag_values = {};
         for (let n in vals) {
             this.flag_values[n] = (1 << vals[n]);
         }
-        if (flags_ && typeof flags_ == "number") this.flags = flags_;
+        if (flags_ && typeof flags_ == "number") { this.flags = flags_; } else { this.flags = 0;}
+    }
+
+    add(flag: GMFlagChangeArgument): boolean {
+        if (Array.isArray(flag)) {
+            return flag.every((f) => this.add(f));
+        } else {
+            if (!(flag in this.flag_values)) return false;
+            this.flags |= this.flag_values[flag];
+            return true
+        }
+    }
+
+    has(flag: GMFlagChangeArgument): boolean {
+        if (Array.isArray(flag)) {
+            return flag.every(f => this.has(f));
+        }
+        if (!(flag in this.flag_values)) return false;
+        let n = this.flag_values[flag];
+        return ((this.flags & n) === n);
+    }
+
+    remove(flag: GMFlagChangeArgument): boolean {
+        if (Array.isArray(flag)) {
+            return flag.every(f => this.remove(f));
+        }
+        if (!(flag in this.flag_values)) return false;
+        this.flags &= ~this.flag_values[flag];
+        return true;
+    }
+
+    array(): string[] {
+        let r: string[] = [];
+        for (let f in this.flag_values) {
+            let n = this.flag_values[f];
+            if ((this.flags & n) === n) r.push(f);
+        }
+        return r;
+    }
+
+    object(): Record<string, boolean> {
+        let r: Record<string, boolean> = {};
+        for (let f in this.flag_values) {
+            let n = this.flag_values[f];
+            r[f] = (this.flags & n) === n;
+        }
+        return r;
+    }
+    setFlags(f: number): void {
+        this.flags = f;
+    }
+    set(flag, val): boolean {
+        return (val === true) ? this.add(flag) : this.remove(flag);
+    }
+    fromObject(o: Record<string, boolean>): boolean {
+        return Object.keys(o).every(k => this.set(k, o[k]));
     }
 }
 const gm = new class {
+    Flags: typeof GMFlags;
     
     constructor() {
-        
+        this.Flags = GMFlags;
     }
 
     onload(clb: (e?: Event) => any): void {
