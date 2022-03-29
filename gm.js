@@ -75,6 +75,84 @@ var GMFlags = /** @class */ (function () {
     };
     return GMFlags;
 }());
+var GMClasses = /** @class */ (function () {
+    function GMClasses(node_) {
+        this.classes = [];
+        this.node = node_;
+    }
+    GMClasses.prototype.fetch = function () {
+        this.classes = this.node.className.split(" ");
+        return this;
+    };
+    /**
+     * @deprecated */
+    GMClasses.prototype.get = function () { return this.fetch(); };
+    GMClasses.prototype.refresh = function () {
+        this.node.className = this.classes.join(" ");
+        return this;
+    };
+    /**
+     * @deprecated
+     */
+    GMClasses.prototype.set = function () { return this.refresh(); };
+    GMClasses.prototype.add = function (class_) {
+        if (Array.isArray(class_)) {
+            for (var i = 0; i < class_.length; i++) {
+                var c = class_[i];
+                if (this.classes.indexOf(c) === -1)
+                    this.classes.push(c);
+            }
+        }
+        else {
+            if (this.classes.indexOf(class_) === -1)
+                this.classes.push(class_);
+        }
+        return this.refresh();
+    };
+    /**
+     * @deprecated
+     */
+    GMClasses.prototype.addNew = function (class_) {
+        return this.add(class_);
+    };
+    GMClasses.prototype.toggle = function (class_) {
+        if (Array.isArray(class_)) {
+            for (var i = 0; i < class_.length; i++) {
+                this.toggle(class_[i]);
+            }
+        }
+        else {
+            (this.classes.indexOf(class_) === -1) ? this.add(class_) : this.remove(class_);
+        }
+        return this.refresh();
+    };
+    GMClasses.prototype.remove = function (class_) {
+        if (Array.isArray(class_)) {
+            for (var i = 0; i < class_.length; i++) {
+                this.remove(class_[i]);
+            }
+        }
+        else {
+            var index = this.classes.indexOf(class_);
+            if (index < 0) {
+                return this;
+            }
+            while (index > -1) {
+                this.classes.splice(index, 1);
+                index = this.classes.indexOf(class_);
+            }
+        }
+        return this.refresh();
+    };
+    GMClasses.prototype.clear = function () {
+        this.classes = [];
+        return this.refresh();
+    };
+    GMClasses.prototype.toString = function () {
+        return this.classes.join(" ");
+    };
+    return GMClasses;
+}());
 var gm = new /** @class */ (function () {
     function class_1() {
         this.Flags = GMFlags;
@@ -467,6 +545,58 @@ var gm = new /** @class */ (function () {
             }
             return result;
         };
+    };
+    class_1.prototype.formatTime = function (milliseconds) {
+        if (typeof (milliseconds) != "number") {
+            return milliseconds;
+        }
+        if (milliseconds >= (3600 * 24 * 1000)) { //more than a day
+            return String(Math.floor(milliseconds / (1000 * 60 * 60 * 24))) + "d " + String(Math.floor((milliseconds % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))) + "h " + String(Math.floor((milliseconds % (1000 * 60 * 60)) / (1000 * 60))) + "m " + Math.floor((milliseconds % (1000 * 60)) / 1000) + "s";
+        }
+        else if (milliseconds >= 3600 * 1000) {
+            return String(Math.floor((milliseconds % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))) + "h " + String(Math.floor((milliseconds % (1000 * 60 * 60)) / (1000 * 60))) + "m " + String(Math.floor((milliseconds % (1000 * 60)) / 1000)) + "s";
+        }
+        else if (milliseconds >= 60 * 1000) {
+            return String(Math.floor((milliseconds % (1000 * 60 * 60)) / (1000 * 60))) + "m " + String(Math.floor((milliseconds % (1000 * 60)) / 1000)) + "s";
+        }
+        else if (milliseconds >= 1000) {
+            return String(Math.round(milliseconds / 1000)) + "s";
+        }
+        else {
+            return String(milliseconds) + "ms";
+        }
+    };
+    class_1.prototype.classes = function (node) {
+        return new GMClasses(node);
+    };
+    class_1.prototype.CSVToArray = function (strData, strDelimiter) {
+        // source: https://stackoverflow.com/questions/1293147/example-javascript-code-to-parse-csv-data
+        strDelimiter = (strDelimiter || ",");
+        var objPattern = new RegExp((
+        // Delimiters.
+        "(\\" + strDelimiter + "|\\r?\\n|\\r|^)" +
+            // Quoted fields.
+            "(?:\"([^\"]*(?:\"\"[^\"]*)*)\"|" +
+            // Standard fields.
+            "([^\"\\" + strDelimiter + "\\r\\n]*))"), "gi");
+        var arrData = [[]];
+        var arrMatches = null;
+        while (arrMatches = objPattern.exec(strData)) {
+            var strMatchedDelimiter = arrMatches[1];
+            if (strMatchedDelimiter.length &&
+                strMatchedDelimiter !== strDelimiter) {
+                arrData.push([]);
+            }
+            var strMatchedValue;
+            if (arrMatches[2]) {
+                strMatchedValue = arrMatches[2].replace(new RegExp("\"\"", "g"), "\"");
+            }
+            else {
+                strMatchedValue = arrMatches[3];
+            }
+            arrData[arrData.length - 1].push(strMatchedValue);
+        }
+        return (arrData);
     };
     return class_1;
 }())();

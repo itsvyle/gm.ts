@@ -28,6 +28,12 @@ interface GMRequestReturn<Type> {
     res: Type | null | string;
 }
 type GMFlagChangeArgument = (string | string[])
+type GMSortBy = {
+    name: string;
+    primer?: (a: any) => any;
+    reverse?: boolean;
+}
+
 class GMFlags {
     flag_values: Record<string, number>;
     flags: number;
@@ -97,6 +103,84 @@ class GMFlags {
         return Object.keys(o).every(k => this.set(k, o[k]));
     }
 }
+
+class GMClasses {
+    node: HTMLElement;
+    classes: string[] = [];
+    constructor(node_: HTMLElement) {
+        this.node = node_;
+    }
+    fetch():GMClasses {
+        this.classes = this.node.className.split(" ");
+        return this;
+    }
+    /**
+     * @deprecated */
+    get(): GMClasses { return this.fetch(); }
+
+    refresh(): GMClasses {
+        this.node.className = this.classes.join(" ");
+        return this;
+    }
+    /**
+     * @deprecated 
+     */
+    set(): GMClasses { return this.refresh(); }
+
+    add(class_: string | string[]): GMClasses {
+        if (Array.isArray(class_)) {
+            for (let i = 0; i < class_.length; i++) {
+                let c = class_[i];
+                if (this.classes.indexOf(c) === -1) this.classes.push(c);
+            }
+        } else {
+            if (this.classes.indexOf(class_) === -1) this.classes.push(class_);
+        }
+        return this.refresh();
+    }
+    /**
+     * @deprecated
+     */
+    addNew(class_: string | string[]): GMClasses {
+        return this.add(class_);
+    }
+
+    toggle(class_: string | string[]): GMClasses {
+        if (Array.isArray(class_)) {
+            for (let i = 0; i < class_.length; i++) {
+                this.toggle(class_[i]);
+            }
+        } else {
+            (this.classes.indexOf(class_) === -1) ? this.add(class_) : this.remove(class_);
+        }
+        return this.refresh();
+    }
+    remove(class_: string | string[]): GMClasses {
+        if (Array.isArray(class_)) {
+            for (let i = 0; i < class_.length; i++) {
+                this.remove(class_[i]);
+            }
+        } else {
+            var index = this.classes.indexOf(class_);
+            if (index < 0) { return this; }
+            while (index > -1) {
+                this.classes.splice(index, 1);
+                index = this.classes.indexOf(class_);
+            }
+        }
+        return this.refresh();
+    }
+    clear(): GMClasses {
+        this.classes = [];
+        return this.refresh();
+    }
+
+
+    toString() {
+        return this.classes.join(" ");
+    }
+}
+
 const gm = new class {
     Flags: typeof GMFlags;
     gmCopyTextarea: HTMLTextAreaElement | null;
@@ -422,8 +506,7 @@ const gm = new class {
         if (str.length < 1) { return str.toUpperCase(); }
         return str[0].toUpperCase() + str.slice(1).toLowerCase();
     }
-
-    sortBy(...args): (a, b) => number {
+    sortBy(...args: GMSortBy[]): (a, b) => number {
         var fields = [].slice.call(args),
             n_fields = fields.length;
 
@@ -452,5 +535,69 @@ const gm = new class {
             }
             return result;
         };
+    }
+
+    formatTime(milliseconds: number): string {
+        if (typeof (milliseconds) != "number") { return milliseconds; }
+        if (milliseconds >= (3600 * 24 * 1000)) {//more than a day
+            return String(Math.floor(milliseconds / (1000 * 60 * 60 * 24))) + "d " + String(Math.floor((milliseconds % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))) + "h " + String(Math.floor((milliseconds % (1000 * 60 * 60)) / (1000 * 60))) + "m " + Math.floor((milliseconds % (1000 * 60)) / 1000) + "s";
+        } else if (milliseconds >= 3600 * 1000) {
+            return String(Math.floor((milliseconds % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))) + "h " + String(Math.floor((milliseconds % (1000 * 60 * 60)) / (1000 * 60))) + "m " + String(Math.floor((milliseconds % (1000 * 60)) / 1000)) + "s";
+        } else if (milliseconds >= 60 * 1000) {
+            return String(Math.floor((milliseconds % (1000 * 60 * 60)) / (1000 * 60))) + "m " + String(Math.floor((milliseconds % (1000 * 60)) / 1000)) + "s";
+        } else if (milliseconds >= 1000) {
+            return String(Math.round(milliseconds / 1000)) + "s";
+        } else {
+            return String(milliseconds) + "ms";
+        }
+    }
+
+    classes(node: HTMLElement) {
+        return new GMClasses(node);
+    }
+
+    CSVToArray(strData, strDelimiter) {
+        // source: https://stackoverflow.com/questions/1293147/example-javascript-code-to-parse-csv-data
+        strDelimiter = (strDelimiter || ",");
+        var objPattern = new RegExp(
+            (
+                // Delimiters.
+                "(\\" + strDelimiter + "|\\r?\\n|\\r|^)" +
+
+                // Quoted fields.
+                "(?:\"([^\"]*(?:\"\"[^\"]*)*)\"|" +
+
+                // Standard fields.
+                "([^\"\\" + strDelimiter + "\\r\\n]*))"
+            ),
+            "gi"
+        );
+
+        var arrData = [[]];
+        var arrMatches = null;
+
+        while (arrMatches = objPattern.exec(strData)) {
+            var strMatchedDelimiter = arrMatches[1];
+            if (
+                strMatchedDelimiter.length &&
+                strMatchedDelimiter !== strDelimiter
+            ) {
+                arrData.push([]);
+            }
+
+            var strMatchedValue;
+            if (arrMatches[2]) {
+                strMatchedValue = arrMatches[2].replace(
+                    new RegExp("\"\"", "g"),
+                    "\""
+                );
+
+            } else {
+                strMatchedValue = arrMatches[3];
+
+            }
+            arrData[arrData.length - 1].push(strMatchedValue);
+        }
+        return (arrData);
     }
 }();
