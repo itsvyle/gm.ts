@@ -1,3 +1,14 @@
+var GMFlags = /** @class */ (function () {
+    function GMFlags(vals, flags_) {
+        this.flag_values = {};
+        for (var n in vals) {
+            this.flag_values[n] = (1 << vals[n]);
+        }
+        if (flags_ && typeof flags_ == "number")
+            this.flags = flags_;
+    }
+    return GMFlags;
+}());
 var gm = new /** @class */ (function () {
     function class_1() {
     }
