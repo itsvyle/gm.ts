@@ -34,7 +34,7 @@ class GMFlags {
     cname: string | null = null;
     version: string | null = null
 
-    constructor(vals: Record<string,number>,flags_?: number) {
+    constructor(vals: Record<string,number>,flags_: number = 10) {
         this.flag_values = {};
         for (let n in vals) {
             this.flag_values[n] = (1 << vals[n]);
@@ -99,6 +99,7 @@ class GMFlags {
 }
 const gm = new class {
     Flags: typeof GMFlags;
+    gmCopyTextarea: HTMLTextAreaElement | null;
     
     constructor() {
         this.Flags = GMFlags;
@@ -311,5 +312,145 @@ const gm = new class {
             ret += encodeURIComponent(n) + "=" + v;
         }
         return ret;
+    }
+
+    getDataURL(img: HTMLImageElement, type: string = "image/png"): string | null {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        // Draw the image
+        ctx.drawImage(img, 0, 0);
+        try {
+            return canvas.toDataURL(type);
+        } catch (err) {
+            return null;
+        }
+    }
+
+    copyText(text: string, clb: () => void = () => { }): void {
+        if (!this.gmCopyTextarea) {
+            this.gmCopyTextarea = gm.newItem("textarea", { style: "width: 0;height: 0;opacity: 1;position: fixed;left: -10px;" }, document.body) as HTMLTextAreaElement;
+        }
+        this.gmCopyTextarea.value = text;
+        var selected: Range|boolean = document.getSelection().rangeCount > 0;
+        if (selected) {
+            selected = document.getSelection().getRangeAt(0);
+        } else {
+            selected = false;
+        }
+
+        this.gmCopyTextarea.select();
+        this.gmCopyTextarea.setSelectionRange(0, 99999);
+        document.execCommand("copy");
+
+        if (selected) {
+            document.getSelection().removeAllRanges();
+            document.getSelection().addRange(selected);
+        }
+        clb();
+    }
+
+    changeURL(url: string, title: string = ""): void {
+        window.history.replaceState({}, title, url);
+    }
+
+    UTCTime(d1?: Date): number {
+        if (!d1) d1 = new Date();
+        return (new Date(d1.getUTCFullYear(), d1.getUTCMonth(), d1.getUTCDate(), d1.getUTCHours(), d1.getUTCMinutes(), d1.getUTCSeconds(), d1.getUTCMilliseconds())).getTime();
+    }
+
+    setCookie(cname: string, cvalue: string, exdays: number |null= null) {
+        var expires = "";
+        if (exdays != null) {
+            var d = new Date();
+            d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+            var expires = ";expires=" + d.toUTCString();
+        }
+        document.cookie = cname + "=" + cvalue + expires + ";path=/";
+    }
+
+    getCookie(cname: string): string|null {
+        var name = cname + "=";
+        var decodedCookie = decodeURIComponent(document.cookie);
+        var ca = decodedCookie.split(';');
+        for (var i = 0; i < ca.length; i++) {
+            var c = ca[i];
+            while (c.charAt(0) == ' ') {
+                c = c.substring(1);
+            }
+            if (c.indexOf(name) == 0) {
+                return c.substring(name.length, c.length);
+            }
+        }
+        return null;
+    }
+    deleteCookie(cname: string) {
+        gm.setCookie(cname, "null", -100);
+    }
+
+    escapeHTML(str: string) {
+        return str
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    deepEqual(object1: object, object2: object): boolean {
+        var isObject = function (object) { return (object != null && typeof object === 'object'); };
+        if (!isObject(object1) || !isObject(object2)) { return false; }
+        var keys1 = Object.keys(object1);
+        var keys2 = Object.keys(object2);
+
+        if (keys1.length !== keys2.length) {
+            return false;
+        }
+        for (var i = 0; i < keys1.length; i++) {
+            var key = keys1[i];
+            var val1 = object1[key];
+            var val2 = object2[key];
+            var areObjects = isObject(val1) && isObject(val2);
+            if (areObjects && !gm.deepEqual(val1, val2) || !areObjects && val1 !== val2
+            ) { return false; }
+        }
+        return true;
+    }
+
+    firstUpper(str: string): string {
+        if (str.length < 1) { return str.toUpperCase(); }
+        return str[0].toUpperCase() + str.slice(1).toLowerCase();
+    }
+
+    sortBy(...args): (a, b) => number {
+        var fields = [].slice.call(args),
+            n_fields = fields.length;
+
+        return function (A, B) {
+            var a, b, field, key, primer, reverse, result, i;
+
+            for (i = 0; i < n_fields; i++) {
+                result = 0;
+                field = fields[i];
+
+                key = typeof (field) === 'string' ? field : field.name;
+
+                a = A[key];
+                b = B[key];
+
+                if (typeof (field.primer) !== 'undefined') {
+                    a = field.primer(a);
+                    b = field.primer(b);
+                }
+
+                reverse = (field.reverse) ? -1 : 1;
+
+                if (a < b) { result = reverse * -1 };
+                if (a > b) { result = reverse * 1 };
+                if (result !== 0) { break; }
+            }
+            return result;
+        };
     }
 }();

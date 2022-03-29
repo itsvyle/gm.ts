@@ -1,5 +1,6 @@
 var GMFlags = /** @class */ (function () {
     function GMFlags(vals, flags_) {
+        if (flags_ === void 0) { flags_ = 10; }
         this.cname = null;
         this.version = null;
         this.flag_values = {};
@@ -323,6 +324,149 @@ var gm = new /** @class */ (function () {
             ret += encodeURIComponent(n) + "=" + v;
         }
         return ret;
+    };
+    class_1.prototype.getDataURL = function (img, type) {
+        if (type === void 0) { type = "image/png"; }
+        var canvas = document.createElement("canvas");
+        var ctx = canvas.getContext("2d");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        // Draw the image
+        ctx.drawImage(img, 0, 0);
+        try {
+            return canvas.toDataURL(type);
+        }
+        catch (err) {
+            return null;
+        }
+    };
+    class_1.prototype.copyText = function (text, clb) {
+        if (clb === void 0) { clb = function () { }; }
+        if (!this.gmCopyTextarea) {
+            this.gmCopyTextarea = gm.newItem("textarea", { style: "width: 0;height: 0;opacity: 1;position: fixed;left: -10px;" }, document.body);
+        }
+        this.gmCopyTextarea.value = text;
+        var selected = document.getSelection().rangeCount > 0;
+        if (selected) {
+            selected = document.getSelection().getRangeAt(0);
+        }
+        else {
+            selected = false;
+        }
+        this.gmCopyTextarea.select();
+        this.gmCopyTextarea.setSelectionRange(0, 99999);
+        document.execCommand("copy");
+        if (selected) {
+            document.getSelection().removeAllRanges();
+            document.getSelection().addRange(selected);
+        }
+        clb();
+    };
+    class_1.prototype.changeURL = function (url, title) {
+        if (title === void 0) { title = ""; }
+        window.history.replaceState({}, title, url);
+    };
+    class_1.prototype.UTCTime = function (d1) {
+        if (!d1)
+            d1 = new Date();
+        return (new Date(d1.getUTCFullYear(), d1.getUTCMonth(), d1.getUTCDate(), d1.getUTCHours(), d1.getUTCMinutes(), d1.getUTCSeconds(), d1.getUTCMilliseconds())).getTime();
+    };
+    class_1.prototype.setCookie = function (cname, cvalue, exdays) {
+        if (exdays === void 0) { exdays = null; }
+        var expires = "";
+        if (exdays != null) {
+            var d = new Date();
+            d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+            var expires = ";expires=" + d.toUTCString();
+        }
+        document.cookie = cname + "=" + cvalue + expires + ";path=/";
+    };
+    class_1.prototype.getCookie = function (cname) {
+        var name = cname + "=";
+        var decodedCookie = decodeURIComponent(document.cookie);
+        var ca = decodedCookie.split(';');
+        for (var i = 0; i < ca.length; i++) {
+            var c = ca[i];
+            while (c.charAt(0) == ' ') {
+                c = c.substring(1);
+            }
+            if (c.indexOf(name) == 0) {
+                return c.substring(name.length, c.length);
+            }
+        }
+        return null;
+    };
+    class_1.prototype.deleteCookie = function (cname) {
+        gm.setCookie(cname, "null", -100);
+    };
+    class_1.prototype.escapeHTML = function (str) {
+        return str
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    };
+    class_1.prototype.deepEqual = function (object1, object2) {
+        var isObject = function (object) { return (object != null && typeof object === 'object'); };
+        if (!isObject(object1) || !isObject(object2)) {
+            return false;
+        }
+        var keys1 = Object.keys(object1);
+        var keys2 = Object.keys(object2);
+        if (keys1.length !== keys2.length) {
+            return false;
+        }
+        for (var i = 0; i < keys1.length; i++) {
+            var key = keys1[i];
+            var val1 = object1[key];
+            var val2 = object2[key];
+            var areObjects = isObject(val1) && isObject(val2);
+            if (areObjects && !gm.deepEqual(val1, val2) || !areObjects && val1 !== val2) {
+                return false;
+            }
+        }
+        return true;
+    };
+    class_1.prototype.firstUpper = function (str) {
+        if (str.length < 1) {
+            return str.toUpperCase();
+        }
+        return str[0].toUpperCase() + str.slice(1).toLowerCase();
+    };
+    class_1.prototype.sortBy = function () {
+        var args = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            args[_i] = arguments[_i];
+        }
+        var fields = [].slice.call(args), n_fields = fields.length;
+        return function (A, B) {
+            var a, b, field, key, primer, reverse, result, i;
+            for (i = 0; i < n_fields; i++) {
+                result = 0;
+                field = fields[i];
+                key = typeof (field) === 'string' ? field : field.name;
+                a = A[key];
+                b = B[key];
+                if (typeof (field.primer) !== 'undefined') {
+                    a = field.primer(a);
+                    b = field.primer(b);
+                }
+                reverse = (field.reverse) ? -1 : 1;
+                if (a < b) {
+                    result = reverse * -1;
+                }
+                ;
+                if (a > b) {
+                    result = reverse * 1;
+                }
+                ;
+                if (result !== 0) {
+                    break;
+                }
+            }
+            return result;
+        };
     };
     return class_1;
 }())();
