@@ -2,6 +2,10 @@ interface GMFromIdsArgument {
     [index: string]: string | null
 }
 interface GMNewItemOptions {
+    className?: string;
+    style?: string;
+    innerText?: string;
+    innerHTML?: string;
     [index: string]: string | number | boolean | null;
 }
 
@@ -33,7 +37,12 @@ type GMSortBy = {
     primer?: (a: any) => any;
     reverse?: boolean;
 }
-
+type GMAlert = {
+    title: string;
+    body: string;
+    type_: ("normal" | "error" | "success");
+    continueWith: () => void;
+};
 class GMFlags {
     flag_values: Record<string, number>;
     flags: number;
@@ -183,7 +192,8 @@ class GMClasses {
 
 const gm = new class {
     Flags: typeof GMFlags;
-    gmCopyTextarea: HTMLTextAreaElement | null;
+    private gmCopyTextarea: HTMLTextAreaElement | null;
+    private alerts_queue: GMAlert[] = [];
     
     constructor() {
         this.Flags = GMFlags;
@@ -217,7 +227,7 @@ const gm = new class {
         if (typeof opts == "string") { opts = { className: opts }; } else if (opts === null) { opts = {}; }
         let o: HTMLElement = <HTMLElement>document.createElement(itemType);
         for (let k in opts) {
-            if (k in o) {
+            if ((k in o) && k!=="style") {
                 // @ts-ignore
                 o[k] = opts[k];
             } else {
@@ -599,5 +609,19 @@ const gm = new class {
             arrData[arrData.length - 1].push(strMatchedValue);
         }
         return (arrData);
+    }
+
+    alert(title_: string, body_: string, type_: ("normal" | "error" | "success") = "normal", continueWith: () => void = () => { }): void {
+        if (document.getElementsByClassName("gm-alert-container").length === 0) {
+            gm.newItem("div", "gm-alert-background", document.body);
+            let a = gm.newItem("div", "gm-alert", gm.newItem("div", "gm-alert-container", document.body)) as HTMLDivElement;
+            gm.newItem("div", "gm-alert-title", a);
+            gm.newItem("div", "gm-alert-body", a);
+            gm.newItem("button", {className: "gm-alert-button",innerText: "Ok"}, a);
+        }
+        if (document.body.className.indexOf("gm-alert-visible") === -1) {
+
+        }
+        let al = document.getElementsByClassName("gm-alert")[0] as HTMLDivElement;
     }
 }();

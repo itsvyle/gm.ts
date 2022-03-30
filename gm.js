@@ -155,6 +155,7 @@ var GMClasses = /** @class */ (function () {
 }());
 var gm = new /** @class */ (function () {
     function class_1() {
+        this.alerts_queue = [];
         this.Flags = GMFlags;
     }
     class_1.prototype.onload = function (clb) {
@@ -198,7 +199,7 @@ var gm = new /** @class */ (function () {
         }
         var o = document.createElement(itemType);
         for (var k in opts) {
-            if (k in o) {
+            if ((k in o) && k !== "style") {
                 // @ts-ignore
                 o[k] = opts[k];
             }
@@ -597,6 +598,20 @@ var gm = new /** @class */ (function () {
             arrData[arrData.length - 1].push(strMatchedValue);
         }
         return (arrData);
+    };
+    class_1.prototype.alert = function (title_, body_, type_, continueWith) {
+        if (type_ === void 0) { type_ = "normal"; }
+        if (continueWith === void 0) { continueWith = function () { }; }
+        if (document.getElementsByClassName("gm-alert-container").length === 0) {
+            gm.newItem("div", "gm-alert-background", document.body);
+            var a = gm.newItem("div", "gm-alert", gm.newItem("div", "gm-alert-container", document.body));
+            gm.newItem("div", "gm-alert-title", a);
+            gm.newItem("div", "gm-alert-body", a);
+            gm.newItem("button", { className: "gm-alert-button", innerText: "Ok" }, a);
+        }
+        if (document.body.className.indexOf("gm-alert-visible") === -1) {
+        }
+        var al = document.getElementsByClassName("gm-alert")[0];
     };
     return class_1;
 }())();

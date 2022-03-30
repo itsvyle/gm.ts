@@ -1,0 +1,99 @@
+a, abbr, acronym, address, applet, big, blockquote, body, caption, cite, code, dd, del, dfn, div, dl, dt, em, fieldset, form, h1, h2, h3, h4, h5, h6, html, iframe, img, ins, kbd, label, legend, li, object, ol, p, pre, q, s, samp, small, span, strike, strong, table, tbody, td, tfoot, th, thead, tr, tt, ul, var {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-weight: inherit;
+    font-style: inherit;
+    font-family: inherit;
+    font-size: 100%;
+    vertical-align: baseline;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+a {
+    text-decoration: none;
+}
+
+*:focus {
+    outline: none;
+}
+
+
+
+.gm-button {
+    width: 100%;
+    background-color: #4CAF50;
+    color: white;
+    padding: 14px 20px;
+    margin: 8px 0;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.gm-alert-container {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 256;
+    display: none;
+}
+.gm-alert-background {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-color: black;
+    opacity: 0.8;
+    z-index: 255;
+    display: none;
+}
+body.gm-alert-visible .gm-alert-background, body.gm-alert-visible .gm-alert-container {
+    display: initial;
+}
+.gm-alert {
+    margin-right: auto;
+    margin-left: auto;
+    background-color: white;
+    width: 100%;
+    max-width: 400px;
+    /*height: 100%;
+    max-height: 250px;*/
+    border: 3px solid lightgray;
+    border-radius: 8px;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    padding: 7px;
+}
+.gm-alert.error {
+    border-color: red;
+}
+.gm-alert.success {
+    border-color: lawngreen;
+}
+.gm-alert-title {
+    width: 100%;
+    text-align: center;
+    font-size: 26px;
+    font-weight: 600;
+}
+.gm-alert-button {
+    width: 100%;
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    margin: 8px 0;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
