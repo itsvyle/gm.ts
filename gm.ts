@@ -49,12 +49,12 @@ class GMFlags {
     cname: string | null = null;
     version: string | null = null
 
-    constructor(vals: Record<string,number>,flags_: number = 10) {
+    constructor(vals: Record<string, number>, flags_: number = 10) {
         this.flag_values = {};
         for (let n in vals) {
             this.flag_values[n] = (1 << vals[n]);
         }
-        if (flags_ && typeof flags_ == "number") { this.flags = flags_; } else { this.flags = 0;}
+        if (flags_ && typeof flags_ == "number") { this.flags = flags_; } else { this.flags = 0; }
     }
 
     add(flag: GMFlagChangeArgument): boolean {
@@ -119,7 +119,7 @@ class GMClasses {
     constructor(node_: HTMLElement) {
         this.node = node_;
     }
-    fetch():GMClasses {
+    fetch(): GMClasses {
         this.classes = this.node.className.split(" ");
         return this;
     }
@@ -194,7 +194,7 @@ const gm = new class {
     Flags: typeof GMFlags;
     private gmCopyTextarea: HTMLTextAreaElement | null;
     private alerts_queue: GMAlert[] = [];
-    
+
     constructor() {
         this.Flags = GMFlags;
     }
@@ -227,7 +227,7 @@ const gm = new class {
         if (typeof opts == "string") { opts = { className: opts }; } else if (opts === null) { opts = {}; }
         let o: HTMLElement = <HTMLElement>document.createElement(itemType);
         for (let k in opts) {
-            if ((k in o) && k!=="style") {
+            if ((k in o) && k !== "style") {
                 // @ts-ignore
                 o[k] = opts[k];
             } else {
@@ -427,7 +427,7 @@ const gm = new class {
             this.gmCopyTextarea = gm.newItem("textarea", { style: "width: 0;height: 0;opacity: 1;position: fixed;left: -10px;" }, document.body) as HTMLTextAreaElement;
         }
         this.gmCopyTextarea.value = text;
-        var selected: Range|boolean = document.getSelection().rangeCount > 0;
+        var selected: Range | boolean = document.getSelection().rangeCount > 0;
         if (selected) {
             selected = document.getSelection().getRangeAt(0);
         } else {
@@ -454,7 +454,7 @@ const gm = new class {
         return (new Date(d1.getUTCFullYear(), d1.getUTCMonth(), d1.getUTCDate(), d1.getUTCHours(), d1.getUTCMinutes(), d1.getUTCSeconds(), d1.getUTCMilliseconds())).getTime();
     }
 
-    setCookie(cname: string, cvalue: string, exdays: number |null= null) {
+    setCookie(cname: string, cvalue: string, exdays: number | null = null) {
         var expires = "";
         if (exdays != null) {
             var d = new Date();
@@ -464,7 +464,7 @@ const gm = new class {
         document.cookie = cname + "=" + cvalue + expires + ";path=/";
     }
 
-    getCookie(cname: string): string|null {
+    getCookie(cname: string): string | null {
         var name = cname + "=";
         var decodedCookie = decodeURIComponent(document.cookie);
         var ca = decodedCookie.split(';');
@@ -566,6 +566,10 @@ const gm = new class {
         return new GMClasses(node);
     }
 
+    toTimeZone(date: string | Date, tzString) {
+        return new Date((typeof date === "string" ? new Date(date) : date).toLocaleString("en-US", { timeZone: tzString }));
+    }
+
     CSVToArray(strData, strDelimiter) {
         // source: https://stackoverflow.com/questions/1293147/example-javascript-code-to-parse-csv-data
         strDelimiter = (strDelimiter || ",");
@@ -617,7 +621,7 @@ const gm = new class {
             let a = gm.newItem("div", "gm-alert", gm.newItem("div", "gm-alert-container", document.body)) as HTMLDivElement;
             gm.newItem("div", "gm-alert-title", a);
             gm.newItem("div", "gm-alert-body", a);
-            gm.newItem("button", {className: "gm-alert-button",innerText: "Ok"}, a);
+            gm.newItem("button", { className: "gm-alert-button", innerText: "Ok" }, a);
         }
         if (document.body.className.indexOf("gm-alert-visible") === -1) {
 
@@ -625,3 +629,46 @@ const gm = new class {
         let al = document.getElementsByClassName("gm-alert")[0] as HTMLDivElement;
     }
 }();
+
+var profileDropDown = null;
+window.addEventListener("load", function () { profileDropDown = document.getElementById("nav-profile-dropdown"); })
+function openProfileDropdown(clicked, event) {
+    if (profileDropDown.classList.contains("open")) { return; }
+    profileDropDown.classList.add("open");
+    var x, y;
+    // x = event.pageX;
+    // y = event.pageY;
+    x = clicked.offsetLeft;
+    y = clicked.offsetTop + clicked.offsetHeight;
+    var w = profileDropDown.offsetWidth, h = profileDropDown.offsetHeight;
+    // y += h;
+
+    if (x + w > window.innerWidth) {
+        x -= w;
+        x += clicked.offsetWidth;
+    }
+    // if (y + h > window.innerHeight) {
+    //   y -= h;
+    // }
+
+
+    // console.log([event.pageX,event.pageY],[w,h],[x,y]);
+
+    profileDropDown.style.left = x;
+    profileDropDown.style.top = y;
+
+
+    const hand = function (e) {
+        e.preventDefault();
+        //if (!e.target) { return par.close(); }
+        if (!profileDropDown.contains(e.target)) {
+            profileDropDown.classList.remove("open");
+            setTimeout(function () {
+                window.removeEventListener("click", hand);
+            }, 1);
+        }
+    };
+    setTimeout(function () {
+        window.addEventListener("click", hand);
+    }, 1);
+}

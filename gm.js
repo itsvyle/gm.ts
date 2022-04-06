@@ -570,6 +570,9 @@ var gm = new /** @class */ (function () {
     class_1.prototype.classes = function (node) {
         return new GMClasses(node);
     };
+    class_1.prototype.toTimeZone = function (date, tzString) {
+        return new Date((typeof date === "string" ? new Date(date) : date).toLocaleString("en-US", { timeZone: tzString }));
+    };
     class_1.prototype.CSVToArray = function (strData, strDelimiter) {
         // source: https://stackoverflow.com/questions/1293147/example-javascript-code-to-parse-csv-data
         strDelimiter = (strDelimiter || ",");
@@ -615,4 +618,42 @@ var gm = new /** @class */ (function () {
     };
     return class_1;
 }())();
+var profileDropDown = null;
+window.addEventListener("load", function () { profileDropDown = document.getElementById("nav-profile-dropdown"); });
+function openProfileDropdown(clicked, event) {
+    if (profileDropDown.classList.contains("open")) {
+        return;
+    }
+    profileDropDown.classList.add("open");
+    var x, y;
+    // x = event.pageX;
+    // y = event.pageY;
+    x = clicked.offsetLeft;
+    y = clicked.offsetTop + clicked.offsetHeight;
+    var w = profileDropDown.offsetWidth, h = profileDropDown.offsetHeight;
+    // y += h;
+    if (x + w > window.innerWidth) {
+        x -= w;
+        x += clicked.offsetWidth;
+    }
+    // if (y + h > window.innerHeight) {
+    //   y -= h;
+    // }
+    // console.log([event.pageX,event.pageY],[w,h],[x,y]);
+    profileDropDown.style.left = x;
+    profileDropDown.style.top = y;
+    var hand = function (e) {
+        e.preventDefault();
+        //if (!e.target) { return par.close(); }
+        if (!profileDropDown.contains(e.target)) {
+            profileDropDown.classList.remove("open");
+            setTimeout(function () {
+                window.removeEventListener("click", hand);
+            }, 1);
+        }
+    };
+    setTimeout(function () {
+        window.addEventListener("click", hand);
+    }, 1);
+}
 //# sourceMappingURL=gm.js.map
