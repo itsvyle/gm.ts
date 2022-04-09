@@ -223,9 +223,9 @@ const gm = new class {
         try { return JSON.parse(t); } catch (err) { return null; }
     }
 
-    newItem(itemType: string, opts: GMNewItemOptions | string | null = {}, appendTo?: (HTMLElement | null)): HTMLElement {
+    newItem(itemType: string, opts: GMNewItemOptions | string | null = {}, appendTo?: (Element | null)): Element {
         if (typeof opts == "string") { opts = { className: opts }; } else if (opts === null) { opts = {}; }
-        let o: HTMLElement = <HTMLElement>document.createElement(itemType);
+        let o: Element = <Element>document.createElement(itemType);
         for (let k in opts) {
             if ((k in o) && k !== "style") {
                 // @ts-ignore
